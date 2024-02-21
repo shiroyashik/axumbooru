@@ -1,3 +1,5 @@
 /target
+/data
 /.vscode
+booruconfig.toml
 .env

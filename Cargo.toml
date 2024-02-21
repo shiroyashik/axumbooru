@@ -11,7 +11,7 @@ name = "dsync"
 path = "dsync.rs"
 
 [dependencies]
-diesel = { version = "2.1.4", features = ["uuid", "postgres"] }
+diesel = { version = "2.1.4", features = ["uuid", "postgres", "chrono"] }
 dsync = "0.0.16"
 dotenvy = "0.15.7"
 uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
@@ -24,3 +24,6 @@ axum = { version = "0.7.4", features = ["json"] }
 anyhow = "1.0.79"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+toml = "0.8.10"
+tower-http = { version = "0.5.1", features = ["fs"] }
+chrono = { version = "0.4.34", features = ["serde"] }
