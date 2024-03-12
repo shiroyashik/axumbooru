@@ -1,0 +1,161 @@
+name = "axumbooru"
+# Следующая часть конфига повторяет Szurubooru
+# и используется для примера, поэтому некоторые
+# аргументы могут не использоваться в коде
+# и не дойти до релиза.
+# P.S. Также некоторые ключи которые я посчитал
+# ненужными или изыботочными опущены.
+
+# full url to the homepage of this szurubooru site, with no trailing slash
+domain = "" # example = http://example.com
+# used to salt the users' password hashes and generate filenames for static content
+secret = "change"
+
+# Delete thumbnails and source files on post delete
+# Original functionality is no, to mitigate the impacts of admins going
+# on unchecked post purges.
+delete_source_files = false
+
+contact_email = "admin@mail.example" # Meant for manual password reset procedures
+
+enable_safety = true
+
+tag_name_regex = '^\S+$'
+tag_category_name_regex = '^[^\s%+#/]+$'
+
+pool_name_regex = '^\S+$'
+pool_category_name_regex = '^[^\s%+#/]+$'
+
+# don't make these more restrictive unless you want to annoy people; if you do
+# customize them, make sure to update the instructions in the registration form
+# template as well.
+password_regex = '^.{5,}$'
+user_name_regex = '^[a-zA-Z0-9_-]{1,32}$'
+
+# allow posts to be uploaded even if some image processing errors occur
+allow_broken_uploads = false
+
+# webhooks to call when events occur (such as post/tag/user/etc. changes)
+# the listed urls will be called with a HTTP POST request with a payload
+# containing a snapshot resource as JSON. See doc/API.md for details
+# webhooks = [
+    # "https://api.example.com/webhooks/",    '
+# ]
+
+default_rank = "regular"
+
+[privileges]
+"users:create:self" = "anonymous" # Registration permission
+"users:create:any" = "administrator"
+"users:list" = "regular"
+"users:view" = "regular"
+"users:edit:any:name" = "moderator"
+"users:edit:any:pass" = "moderator"
+"users:edit:any:email" = "moderator"
+"users:edit:any:avatar" = "moderator"
+"users:edit:any:rank" = "moderator"
+"users:edit:self:name" = "regular"
+"users:edit:self:pass" = "regular"
+"users:edit:self:email" = "regular"
+"users:edit:self:avatar" = "regular"
+"users:edit:self:rank" = "moderator" # one can't promote themselves or anyone to upper rank than their own.
+"users:delete:any" = "administrator"
+"users:delete:self" = "regular"
+
+"userTokens:list:any" = "administrator"
+"userTokens:list:self" = "regular"
+"userTokens:create:any" = "administrator"
+"userTokens:create:self" = "regular"
+"userTokens:edit:any" = "administrator"
+"userTokens:edit:self" = "regular"
+"userTokens:delete:any" = "administrator"
+"userTokens:delete:self" = "regular"
+
+"posts:create:anonymous" = "regular"
+"posts:create:identified" = "regular"
+"posts:list" = "anonymous"
+"posts:reverseSearch" = "regular"
+"posts:view" = "anonymous"
+"posts:view:featured" = "anonymous"
+"posts:edit:content" = "power"
+"posts:edit:flags" = "regular"
+"posts:edit:notes" = "regular"
+"posts:edit:relations" = "regular"
+"posts:edit:safety" = "power"
+"posts:edit:source" = "regular"
+"posts:edit:tags" = "regular"
+"posts:edit:thumbnail" = "power"
+"posts:feature" = "moderator"
+"posts:delete" = "moderator"
+"posts:score" = "regular"
+"posts:merge" = "moderator"
+"posts:favorite" = "regular"
+"posts:bulk-edit:tags" = "power"
+"posts:bulk-edit:safety" = "power"
+"posts:bulk-edit:delete" = "power"
+
+"tags:create" = "regular"
+"tags:edit:names" = "power"
+"tags:edit:category" = "power"
+"tags:edit:description" = "power"
+"tags:edit:implications" = "power"
+"tags:edit:suggestions" = "power"
+"tags:list" = "regular"
+"tags:view" = "anonymous"
+"tags:merge" = "moderator"
+"tags:delete" = "moderator"
+
+"tagCategories:create" = "moderator"
+"tagCategories:edit:name" = "moderator"
+"tagCategories:edit:color" = "moderator"
+"tagCategories:edit:order" = "moderator"
+"tagCategories:list" = "anonymous"
+"tagCategories:view" = "anonymous"
+"tagCategories:delete" = "moderator"
+"tagCategories:setDefault" = "moderator"
+
+"pools:create" = "regular"
+"pools:edit:names" = "power"
+"pools:edit:category" = "power"
+"pools:edit:description" = "power"
+"pools:edit:posts" = "power"
+"pools:list" = "regular"
+"pools:view" = "anonymous"
+"pools:merge" = "moderator"
+"pools:delete" = "moderator"
+
+"poolCategories:create" = "moderator"
+"poolCategories:edit:name" = "moderator"
+"poolCategories:edit:color" = "moderator"
+"poolCategories:list" = "anonymous"
+"poolCategories:view" = "anonymous"
+"poolCategories:delete" = "moderator"
+"poolCategories:setDefault" = "moderator"
+
+"comments:create" = "regular"
+"comments:delete:any" = "moderator"
+"comments:delete:own" = "regular"
+"comments:edit:any" = "moderator"
+"comments:edit:own" = "regular"
+"comments:list" = "regular"
+"comments:view" = "regular"
+"comments:score" = "regular"
+
+"snapshots:list" = "power"
+
+"uploads:create" = "regular"
+"uploads:useDownloader" = "power"
+
+[thumbnails]
+avatar_width = 300
+avatar_height = 300
+post_width = 300
+post_height = 300
+
+[smtp]
+enabled = false
+host = "smtp.mail.example"
+port = 25
+user = "booru"
+pass = "booru"
+from = "booru@mail.example"

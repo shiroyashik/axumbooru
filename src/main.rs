@@ -1,17 +1,11 @@
-use std::{path::PathBuf, str::FromStr, sync::Arc};
-
 use axum::{
-    http::StatusCode, response::{IntoResponse, Response}, routing::get, Router
-};
-pub mod diesel {
-    pub use diesel::*;
-}
-use diesel_async::{
-    pooled_connection::AsyncDieselConnectionManager, AsyncPgConnection, RunQueryDsl,
+    routing::get,
+    Router,
 };
 use dotenvy::dotenv;
-use serde::{self, Serialize};
-use tracing::{debug, error, info, warn};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
+use tracing::{debug, info, trace};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Config
@@ -27,15 +21,14 @@ pub mod error;
 pub use error::{ErrorStruct, Result};
 
 // DB
-pub mod schema;
-pub mod models;
-use self::models::*;
-
-type Pool = bb8::Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
+// pub mod schema;
+// pub mod models;
+// use self::models::*;
 
 #[derive(Debug)]
 pub struct AppState {
-    pool: Pool,
+    // pool: Pool,
+    db: DatabaseConnection,
     config: Config,
 }
 
@@ -51,25 +44,33 @@ async fn main() {
         .init();
     debug!("Current dir: {:?}", std::env::current_dir());
 
-    // let config = Config::parse(PathBuf::from_str("booruconfig.toml").unwrap());
-    // debug!("Config parsed! Data:\n{:?}", config);
-
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // set up connection pool
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+    let mut opt = ConnectOptions::new(db_url);
+    opt.sqlx_logging(true)
+        .sqlx_logging_level(tracing::log::LevelFilter::Trace);
+    // let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
     // let pool = bb8::Pool::builder().build(config).await.unwrap();
 
     let state = Arc::new(AppState {
-        pool: bb8::Pool::builder().build(config).await.unwrap(),
+        // pool: bb8::Pool::builder().build(config).await.unwrap(),
+        db: Database::connect(opt)
+            .await
+            .expect("Database connection error!"),
         config: Config::parse(PathBuf::from_str("booruconfig.toml").unwrap()),
     });
-    debug!("State ready! Data:\n{:?}", state);
+    debug!("State ready!");
+    trace!("Data:\n{:?}", state);
 
     let app = Router::new()
         .route("/test", get(api::test::test_error))
-        .route("/info", get(api::info::server_info)).with_state(state)
-        .fallback_service(api::data::data_static());
+        .route("/info", get(api::info::server_info))
+        .route("/posts/", get(api::post::list_of_posts))
+        .route("/post/:id", get(api::post::get_post_by_id))
+        .route("/user/", get(api::user::get_user_by_id))
+        .fallback_service(api::data::data_static())
+        .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:6667")
         .await

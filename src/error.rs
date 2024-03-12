@@ -1,4 +1,7 @@
-use axum::{body::Body, http::StatusCode, response::{IntoResponse, Response}, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 pub use tracing::{debug, error, info, warn};
@@ -22,7 +25,7 @@ impl ErrorStruct {
         Self {
             name: ErrorType::InternalError,
             title,
-            description
+            description,
         }
     }
 }
@@ -31,6 +34,11 @@ impl IntoResponse for ErrorStruct {
     fn into_response(self) -> Response {
         error!("{self:?}");
 
-        (StatusCode::INTERNAL_SERVER_ERROR, [("Content-Type", "application/json")], to_string_pretty(&self).unwrap()).into_response()
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            [("Content-Type", "application/json")],
+            to_string_pretty(&self).unwrap(),
+        )
+            .into_response()
     }
 }
