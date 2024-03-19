@@ -24,6 +24,21 @@ impl Query {
         User::find().filter(user::Column::Name.contains(name)).one(db).await
     }
 
+    pub async fn find_user_credentials_by_name(db: &DbConn, name: &str) -> Result<Option<user::Model>, DbErr> {
+        User::find()
+        .filter(user::Column::Name.contains(name))
+        .select_only()
+        .columns([user::Column::Id, user::Column::Name, user::Column::PasswordHash])
+        .one(db).await
+    }
+
+    pub async fn find_user_credentials_by_id(db: &DbConn, id: i32) -> Result<Option<user::Model>, DbErr> {
+        User::find_by_id(id)
+        .select_only()
+        .columns([user::Column::Id, user::Column::Name, user::Column::PasswordHash])
+        .one(db).await
+    }
+
     pub async fn find_user_by_id(db: &DbConn, id: i32) -> Result<Option<user::Model>, DbErr> {
         User::find_by_id(id).one(db).await
     }

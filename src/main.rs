@@ -1,6 +1,5 @@
 use axum::{
-    routing::get,
-    Router,
+    middleware::from_extractor, routing::get, Router
 };
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
@@ -20,14 +19,12 @@ pub use api::info;
 pub mod error;
 pub use error::{ErrorStruct, Result};
 
-// DB
-// pub mod schema;
-// pub mod models;
-// use self::models::*;
+// Auth
+pub mod auth;
+pub use auth::RequireAuth;
 
 #[derive(Debug)]
 pub struct AppState {
-    // pool: Pool,
     db: DatabaseConnection,
     config: Config,
 }
@@ -65,10 +62,11 @@ async fn main() {
 
     let app = Router::new()
         .route("/test", get(api::test::test_error))
-        .route("/info", get(api::info::server_info))
         .route("/posts/", get(api::post::list_of_posts))
         .route("/post/:id", get(api::post::get_post_by_id))
         .route("/user/", get(api::user::get_user_by_id))
+        .route_layer(from_extractor::<RequireAuth>()) // Auth, functions lower doesn't require it.
+        .route("/info", get(api::info::server_info))
         .fallback_service(api::data::data_static())
         .with_state(state);
 
