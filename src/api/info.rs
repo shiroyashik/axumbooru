@@ -8,7 +8,7 @@ use config::UserRank;
 use serde::{Deserialize, Serialize};
 use service::PostQuery;
 use std::sync::Arc;
-use tracing::debug;
+use log::debug;
 
 #[derive(Serialize, Deserialize)]
 pub struct InfoAnswer {

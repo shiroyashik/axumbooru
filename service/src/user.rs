@@ -1,5 +1,5 @@
 use ::entity::{user, user::Entity as User};
-use chrono::Local;
+use chrono::{Local, NaiveDateTime as DateTime};
 use sea_orm::*;
 
 pub struct Query;
@@ -24,6 +24,7 @@ impl Query {
         User::find().filter(user::Column::Name.contains(name)).one(db).await
     }
 
+    // Можно использовать как шаблон для запроса из базы данных с фильтром
     pub async fn find_user_credentials_by_name(db: &DbConn, name: &str) -> Result<Option<user::Model>, DbErr> {
         User::find()
         .filter(user::Column::Name.contains(name))
@@ -44,21 +45,33 @@ impl Query {
     }
 }
 
-pub struct Mutation;
+pub struct Mutation {
+    pub id: Option<i32>,
+    pub name: Option<String>,
+    pub password_hash: Option<String>,
+    pub password_salt: Option<String>,
+    pub email: Option<String>,
+    pub rank: Option<String>,
+    pub creation_time: Option<DateTime>,
+    pub last_login_time: Option<DateTime>,
+    pub avatar_style: Option<String>,
+    pub version: Option<i32>,
+    pub password_revision: Option<i16>,
+}
 
 impl Mutation {
     pub async fn create_user(
         db: &DbConn,
-        form_data: user::Model,
+        form_data: Self,
     ) -> Result<user::ActiveModel, DbErr> {
         user::ActiveModel {
-            name: Set(form_data.name.to_owned()),
-            password_hash: Set(form_data.password_hash.to_owned()),
+            name: Set(form_data.name.unwrap()),
+            password_hash: Set(form_data.password_hash.unwrap()),
             password_salt: Set(form_data.password_salt.to_owned()),
             email: Set(form_data.email.to_owned()),
-            rank: Set(form_data.rank.to_owned()),
+            rank: Set(form_data.rank.unwrap()),
             creation_time: Set(Local::now().naive_local().to_owned()),
-            avatar_style: Set(form_data.avatar_style.to_owned()),
+            avatar_style: Set(form_data.avatar_style.unwrap()),
             version: Set(1),
             password_revision: Set(3),
             ..Default::default()

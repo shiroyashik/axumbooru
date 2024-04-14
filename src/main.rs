@@ -1,11 +1,11 @@
 use axum::{
-    middleware::from_extractor, routing::get, Router
+    extract::DefaultBodyLimit, middleware::from_extractor, routing::{get, post}, Router
 };
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use std::{path::PathBuf, str::FromStr, sync::Arc};
-use tracing::{debug, info, trace};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tower_http::trace::TraceLayer;
+use std::{collections::HashMap, path::PathBuf, str::FromStr, sync::{Arc, Mutex}};
+use log::{debug, info, trace};
 
 // Config
 pub mod config;
@@ -27,18 +27,14 @@ pub use auth::RequireAuth;
 pub struct AppState {
     db: DatabaseConnection,
     config: Config,
+    uploads: Mutex<HashMap<String, api::data::Uploads>>,
 }
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "axumbooru=info".into()),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
+    env_logger::init();
+
     debug!("Current dir: {:?}", std::env::current_dir());
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -46,29 +42,34 @@ async fn main() {
     // set up connection pool
     let mut opt = ConnectOptions::new(db_url);
     opt.sqlx_logging(true)
-        .sqlx_logging_level(tracing::log::LevelFilter::Trace);
-    // let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
-    // let pool = bb8::Pool::builder().build(config).await.unwrap();
+        .sqlx_logging_level(log::LevelFilter::Trace);
 
     let state = Arc::new(AppState {
-        // pool: bb8::Pool::builder().build(config).await.unwrap(),
         db: Database::connect(opt)
             .await
             .expect("Database connection error!"),
         config: Config::parse(PathBuf::from_str("booruconfig.toml").unwrap()),
+        uploads: Mutex::new(HashMap::new()),
     });
+
     debug!("State ready!");
     trace!("Data:\n{:?}", state);
 
     let app = Router::new()
-        .route("/test", get(api::test::test_error))
+        .route("/uploads", post(api::data::upload).layer(DefaultBodyLimit::max(1073741824))) // 1 GB
+
+        .route("/test", get(api::test::test))
         .route("/posts/", get(api::post::list_of_posts))
         .route("/post/:id", get(api::post::get_post_by_id))
-        .route("/user/", get(api::user::get_user_by_id))
+        .route("/user/:user", get(api::user::get_user))
+        .route("/user-tokens/:user", get(api::usertoken::list_usertokens))
+        .route("/user-token/:user", post(api::usertoken::create_usertoken))
+        .route("/users", post(api::user::create_user))
         .route_layer(from_extractor::<RequireAuth>()) // Auth, functions lower doesn't require it.
         .route("/info", get(api::info::server_info))
         .fallback_service(api::data::data_static())
-        .with_state(state);
+        .with_state(state)
+        .layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:6667")
         .await

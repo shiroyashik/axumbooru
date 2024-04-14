@@ -1,5 +1,5 @@
 use ::entity::{user_token, user_token::Entity as UserToken};
-use chrono::Local;
+use chrono::{Local, NaiveDateTime as DateTime};
 use sea_orm::*;
 
 pub struct Query;
@@ -20,6 +20,17 @@ impl Query {
         paginator.fetch_page(page).await.map(|p| (p, num_pages))
     }
 
+    pub async fn find_list_user_tokens_by_user_id(
+        db: &DbConn,
+        user_id: i32,
+    ) -> Result<Vec<user_token::Model>, DbErr> {
+        UserToken::find()
+            .filter(user_token::Column::UserId.eq(user_id))
+            .order_by_asc(user_token::Column::Id)
+            .all(db)
+            .await
+    }
+
     pub async fn count_tokens(db: &DbConn) -> Result<u64, DbErr> {
         UserToken::find().count(db).await
     }
@@ -27,20 +38,36 @@ impl Query {
     pub async fn find_token_by_id(db: &DbConn, id: i32) -> Result<Option<user_token::Model>, DbErr> {
         UserToken::find_by_id(id).one(db).await
     }
+
+    pub async fn find_token(db: &DbConn, name: &str) -> Result<Option<user_token::Model>, DbErr> {
+        UserToken::find().filter(user_token::Column::Token.contains(name)).one(db).await
+    }
 }
 
-pub struct Mutation;
+#[derive(Default, Clone)]
+pub struct Mutation {
+    pub id: Option<i32>,
+    pub user_id: Option<i32>,
+    pub token: Option<String>,
+    pub note: Option<String>,
+    pub enabled: Option<bool>,
+    pub expiration_time: Option<DateTime>,
+    pub creation_time: Option<DateTime>,
+    pub last_edit_time: Option<DateTime>,
+    pub last_usage_time: Option<DateTime>,
+    pub version: Option<i32>,
+}
 
 impl Mutation {
     pub async fn create_token(
         db: &DbConn,
-        form_data: user_token::Model,
+        form_data: Self,
     ) -> Result<user_token::ActiveModel, DbErr> {
         user_token::ActiveModel {
-            user_id: Set(form_data.user_id.to_owned()),
-            token: Set(form_data.token.to_owned()),
+            user_id: Set(form_data.user_id.unwrap()),
+            token: Set(form_data.token.unwrap()),
             note: Set(form_data.note.to_owned()),
-            enabled: Set(form_data.enabled.to_owned()),
+            enabled: Set(form_data.enabled.unwrap()),
             expiration_time: Set(form_data.expiration_time.to_owned()),
             creation_time: Set(Local::now().naive_local().to_owned()),
             last_edit_time: Set(None),

@@ -4,7 +4,7 @@ use axum::{
 };
 use serde::Serialize;
 use serde_json::to_string_pretty;
-pub use tracing::{debug, error, info, warn};
+pub use log::error;
 
 pub type Result<T> = core::result::Result<T, ErrorStruct>;
 

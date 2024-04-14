@@ -1,5 +1,5 @@
 use ::entity::{post, post::Entity as Post};
-use chrono::Local;
+use chrono::{Local, NaiveDateTime as DateTime};
 use sea_orm::*;
 
 pub struct Query;
@@ -29,20 +29,36 @@ impl Query {
     }
 }
 
-pub struct Mutation;
+pub struct Mutation {
+    pub id: Option<i32>,
+    pub user_id: Option<i32>,
+    pub creation_time: Option<DateTime>,
+    pub last_edit_time: Option<DateTime>,
+    pub safety: Option<String>,
+    pub r#type: Option<String>,
+    pub checksum: Option<String>,
+    pub source: Option<String>,
+    pub file_size: Option<i64>,
+    pub image_width: Option<i32>,
+    pub image_height: Option<i32>,
+    pub mime_type: Option<String>,
+    pub version: Option<i32>,
+    pub flags: Option<String>,
+    pub checksum_md5: Option<String>,
+}
 
 impl Mutation {
     pub async fn create_post(
         db: &DbConn,
-        form_data: post::Model,
+        form_data: Self,
     ) -> Result<post::ActiveModel, DbErr> {
         post::ActiveModel {
             creation_time: Set(Local::now().naive_local().to_owned()),
-            safety: Set(form_data.safety.to_owned()),
-            r#type: Set(form_data.r#type.to_owned()),
-            checksum: Set(form_data.checksum.to_owned()),
-            mime_type: Set(form_data.mime_type.to_owned()),
-            version: Set(form_data.version.to_owned()),
+            safety: Set(form_data.safety.unwrap()),
+            r#type: Set(form_data.r#type.unwrap()),
+            checksum: Set(form_data.checksum.unwrap()),
+            mime_type: Set(form_data.mime_type.unwrap()),
+            version: Set(form_data.version.unwrap()),
             ..Default::default()
         }
         .save(db)

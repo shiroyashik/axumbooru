@@ -263,6 +263,20 @@ impl FromStr for UserRank {
     type Err = ();
 }
 
+impl ToString for UserRank {
+    fn to_string(&self) -> String {
+        match self {
+            UserRank::Administrator => String::from("administrator"),
+            UserRank::Moderator => String::from("moderator"),
+            UserRank::Power => String::from("power"),
+            UserRank::Regular => String::from("regular"),
+            UserRank::Restricted => String::from("restricted"),
+            UserRank::Anonymous => String::from("anonymous"),
+            UserRank::Nobody => String::from("nobody"),
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum AvatarStyle {
     #[serde(rename = "gravatar")]
@@ -281,6 +295,15 @@ impl FromStr for AvatarStyle {
     }
 
     type Err = ();
+}
+
+impl ToString for AvatarStyle {
+    fn to_string(&self) -> String {
+        match self {
+            AvatarStyle::Gravatar => String::from("gravatar"),
+            AvatarStyle::Manual => String::from("manual"),
+        }
+    }
 }
 
 impl Config {

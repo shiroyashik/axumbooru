@@ -6,7 +6,7 @@ use axum::{
 };
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use tracing::debug;
+use log::debug;
 use md5::Md5;
 use hmac::{Hmac, Mac};
 
