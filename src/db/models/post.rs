@@ -1,4 +1,4 @@
-use ::entity::{post, post::Entity as Post};
+use crate::db::schemas::{post, post::Entity as Post};
 use chrono::{Local, NaiveDateTime as DateTime};
 use sea_orm::*;
 

@@ -6,9 +6,11 @@ use chrono::{Local, NaiveDateTime};
 use serde::{Serialize, Deserialize};
 use log::debug;
 
-use crate::config::{AvatarStyle, UserRank};
-use crate::{AppState, Result};
-use service::{UserQuery, UserMutation};
+use crate::{
+    AppState, Result,
+    config::{AvatarStyle, UserRank},
+    db::models::{UserQuery, UserMutation},
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct UserHttpAnswer {

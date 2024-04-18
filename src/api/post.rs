@@ -12,9 +12,10 @@ use hmac::{Hmac, Mac};
 
 type HmacMd5 = Hmac<Md5>;
 
-use crate::AppState;
-use crate::Result;
-use service::PostQuery;
+use crate::{
+    db::models::PostQuery,
+    AppState, Result
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct PostsAnswer {

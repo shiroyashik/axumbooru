@@ -1,4 +1,4 @@
-use ::entity::{user_token, user_token::Entity as UserToken};
+use crate::db::schemas::{user_token, user_token::Entity as UserToken};
 use chrono::{Local, NaiveDateTime as DateTime};
 use sea_orm::*;
 

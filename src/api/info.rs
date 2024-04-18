@@ -1,12 +1,12 @@
 use crate::{
     config::{self, Privileges},
+    db::models::PostQuery,
     AppState, Config,
 };
 use axum::{extract::State, Json};
 use chrono::prelude::*;
 use config::UserRank;
 use serde::{Deserialize, Serialize};
-use service::PostQuery;
 use std::sync::Arc;
 use log::debug;
 

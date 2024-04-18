@@ -4,11 +4,10 @@ authors = ["Shiroyashik <shiroyashik@shsr.ru>"]
 license = "GPL-3.0-or-later"
 version = "0.1.0"
 edition = "2021"
-default-run = "axumbooru"
 publish = false
 
 [workspace]
-members = ["migration", "entity", "service"]
+members = ["migration"]
 
 [dependencies]
 dotenvy = "0.15.7"
@@ -21,7 +20,6 @@ toml = "0.8.12"
 tower-http = { version = "0.5.2", features = ["fs", "trace"] }
 chrono = { version = "0.4.37", features = ["serde"] }
 sea-orm = { version = "0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-uuid", "debug-print"] }
-service = { path = "service"}
 hmac = "0.12.1"
 md-5 = "0.10.6"
 mime_guess2 = "2.0.5"

@@ -3,11 +3,13 @@ use std::sync::Arc;
 use axum::{extract::{Path, State}, Json};
 use chrono::{DateTime, Local, Months, NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use service::{UserQuery, UserTokenMutation, UserTokenQuery};
 use log::debug;
 use uuid::Uuid;
 
-use crate::{AppState, Result};
+use crate::{
+    AppState, Result,
+    db::models::{UserQuery, UserTokenMutation, UserTokenQuery},
+};
 
 use super::user::MicroUser;
 
