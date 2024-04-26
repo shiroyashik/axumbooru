@@ -4,7 +4,7 @@ use axum::{
     async_trait,
 };
 
-use crate::config::UserRank;
+use crate::UserRank;
 
 pub struct RequireAuth {
     pub has_authorization: bool,

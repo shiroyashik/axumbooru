@@ -5,11 +5,10 @@ use axum::extract::{Path, Query, State, Json};
 use chrono::{Local, NaiveDateTime};
 use serde::{Serialize, Deserialize};
 use log::debug;
+use sea_orm::Set;
 
 use crate::{
-    AppState, Result,
-    config::{AvatarStyle, UserRank},
-    db::models::{UserQuery, UserMutation},
+    db::schemas::user, error::ApiResult, AppState, AvatarStyle, UserRank
 };
 
 #[derive(Serialize, Deserialize)]
@@ -62,14 +61,14 @@ pub async fn get_user(
     Path(user): Path<String>,
     params: Option<Query<UserHttpQuery>>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<UserHttpAnswer>> {
+) -> ApiResult<Json<UserHttpAnswer>> {
 
-    let mut raw_user = UserQuery::find_user_by_name(&state.db, &user).await.expect("Database error!").expect("User not found!");
+    let mut raw_user = state.db.get_user_by_name(&user).await?;
 
     // Update last login time if needed P.S. Лишние операции... так то это всё true false нахуй не надо!
     let Query(params) = params.unwrap_or_default();
     if params.bump_login == true {
-        raw_user = UserMutation::update_last_login_time_by_name(&state.db, &raw_user.name).await.expect("Database error!")
+        raw_user = state.db.update_last_login_time(&raw_user.name).await?
     }
 
     Ok(Json(UserHttpAnswer {
@@ -102,24 +101,21 @@ pub struct CreateUserHttpQuery {
 pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Json(params): Json<CreateUserHttpQuery>, // ЭТА ЕБУЧАЯ ХУЙНЯ ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ, НАВОДИСЬ НА JSON И ПРОЧИТАЙ ПОСЛЕДНЮЮ СТРОКУ СПРАВКИ
-) -> Result<Json<UserHttpAnswer>> {
+) -> ApiResult<Json<UserHttpAnswer>> {
     debug!("Trying to create new user with credentials: {params:?}");
-    let form_data = UserMutation {
-        id: None,
-        name: Some(params.name.clone()),            // TODO!
-        password_hash: Some("aaa".to_string()),     // Переделать под Default
-        password_salt: Some("aaa".to_string()),     // За пример взять UserToken
-        email: params.email.clone(),
-        rank: Some(UserRank::Administrator.to_string()),
-        creation_time: Some(Local::now().naive_local().to_owned()),
-        last_login_time: None,
-        avatar_style: Some(AvatarStyle::Gravatar.to_string()),
-        version: None,
-        password_revision: None,
+    let form_data = user::ActiveModel {
+        name: Set(params.name.clone()),            // TODO!
+        password_hash: Set("aaa".to_string()),     // Переделать под Default
+        password_salt: Set(Some("aaa".to_string())),     // За пример взять UserToken
+        email: Set(params.email.clone()),
+        rank: Set(UserRank::Administrator.to_string()),
+        creation_time: Set(Local::now().naive_local().to_owned()),
+        avatar_style: Set(AvatarStyle::Gravatar.to_string()),
+        ..Default::default()
     };
-    let created_user = UserMutation::create_user(&state.db, form_data).await.expect("DB error or can't create user!");
+    let created_user = state.db.create_user(form_data).await?;
 
-    let raw_user = UserQuery::find_user_by_id(&state.db, created_user.id.unwrap()).await.expect("DB error!").expect("Can't found created user!");
+    let raw_user = state.db.get_user_by_id(created_user.id.unwrap() as u64).await?;
     Ok(Json(UserHttpAnswer {
         name: raw_user.name,
         creation_time: raw_user.creation_time,

@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use axum::{extract::{Path, State}, Json};
 use chrono::{DateTime, Local, Months, NaiveDateTime};
+use sea_orm::Set;
 use serde::{Deserialize, Serialize};
 use log::debug;
 use uuid::Uuid;
 
 use crate::{
-    AppState, Result,
-    db::models::{UserQuery, UserTokenMutation, UserTokenQuery},
+    db::schemas::user_token, error::ApiResult, AppState
 };
 
 use super::user::MicroUser;
@@ -52,23 +52,23 @@ pub async fn create_usertoken( // POST
     Path(user): Path<String>,
     State(state): State<Arc<AppState>>,
     Json(params): Json<CreateUserTokenHttpQuery>, // ЭТА ЕБУЧАЯ ХУЙНЯ ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ, НАВОДИСЬ НА JSON И ПРОЧИТАЙ ПОСЛЕДНЮЮ СТРОКУ СПРАВКИ
-) -> Result<Json<UserTokenHttpResponse>> {
+) -> ApiResult<Json<UserTokenHttpResponse>> {
     debug!("Trying to create new user-token for '{user}' with params: {params:?}");
-    let user = UserQuery::find_user_by_name(&state.db, &user).await.expect("DB error!").expect("Can't found user!");
-    let form_data = UserTokenMutation {
-        user_id: Some(user.id),
-        token: Some(Uuid::new_v4().to_string()),
+    let user = state.db.get_user_by_name(&user).await?;
+    let form_data = user_token::ActiveModel {
+        user_id: Set(user.id),
+        token: Set(Uuid::new_v4().to_string()),
         // Ооо! Пресвятой колхоз!
-        note: Some(params.note.unwrap_or(CreateUserTokenHttpQuery::default().note.unwrap())),
-        enabled: Some(params.enabled.unwrap_or(CreateUserTokenHttpQuery::default().enabled.unwrap())),
+        note: Set(Some(params.note.unwrap_or(CreateUserTokenHttpQuery::default().note.unwrap()))),
+        enabled: Set(params.enabled.unwrap_or(CreateUserTokenHttpQuery::default().enabled.unwrap())),
         // Ооо! Пресвятой колхоз со временем!
-        expiration_time: Some(params.expiration_time.unwrap_or(CreateUserTokenHttpQuery::default().expiration_time.unwrap()).naive_utc()),
+        expiration_time: Set(Some(params.expiration_time.unwrap_or(CreateUserTokenHttpQuery::default().expiration_time.unwrap()).naive_utc())),
         ..Default::default()
     };
-    UserTokenMutation::create_token(&state.db, form_data.clone()).await.expect("DB error!");
-    let raw_token = UserTokenQuery::find_token(&state.db, &form_data.token.unwrap()).await.expect("DB error!").expect("Can't found created user-token!");
+    state.db.create_user_token(form_data.clone()).await?;
+    let raw_token = state.db.get_user_token(&form_data.token.unwrap()).await?;
     Ok(Json(UserTokenHttpResponse {
-        user: MicroUser { name: user.name, avatar_url: "data/avatarka.jpg".to_string() },
+        user: MicroUser { name: user.name, avatar_url: "data/avatarka.jpg".to_string() }, // FIXME: hardcoded
         token: raw_token.token,
         note: raw_token.note,
         enabled: raw_token.enabled,
@@ -89,12 +89,12 @@ pub struct ListUserTokensHttpResponse {
 pub async fn list_usertokens( // GET
     Path(user): Path<String>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<ListUserTokensHttpResponse>> {
-    let user = UserQuery::find_user_by_name(&state.db, &user).await.expect("DB error!").expect("Can't found user!");
-    let raw_tokens = UserTokenQuery::find_list_user_tokens_by_user_id(&state.db, user.id).await.expect("DB error!");
+) -> ApiResult<Json<ListUserTokensHttpResponse>> {
+    let user = state.db.get_user_by_name(&user).await?;
+    let raw_tokens = state.db.get_user_tokens_by_user_id(user.id as u64).await?;
     let miniuser = MicroUser {
         name: user.name,
-        avatar_url: "data/avatarka.jpg".to_string(), // TODO!
+        avatar_url: "data/avatarka.jpg".to_string(), // FIXME: hardcoded
     };
     let mut prepared_tokens: Vec<UserTokenHttpResponse> = Vec::new();
     for model in raw_tokens.iter() {

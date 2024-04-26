@@ -1,11 +1,9 @@
 use crate::{
-    config::{self, Privileges},
-    db::models::PostQuery,
-    AppState, Config,
+    config::Privileges,
+    AppState, Config, UserRank,
 };
 use axum::{extract::State, Json};
 use chrono::prelude::*;
-use config::UserRank;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use log::debug;
@@ -215,7 +213,7 @@ pub async fn server_info(State(state): State<Arc<AppState>>) -> Json<InfoAnswer>
     debug!("called");
 
     let info = InfoAnswer {
-        post_count: PostQuery::count_posts(&state.db).await.unwrap(),
+        post_count: state.db.get_posts_count().await.unwrap(),
         disk_usage: crate::api::data::get_folder_size("./data").unwrap(),
         server_time: Local::now().naive_local(),
         config: FrontendConfig::from_config(state.config.clone()).await,

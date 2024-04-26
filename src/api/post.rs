@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fmt::Display, sync::Arc};
 
 use axum::{
     extract::{Path, Query, State},
@@ -13,8 +13,7 @@ use hmac::{Hmac, Mac};
 type HmacMd5 = Hmac<Md5>;
 
 use crate::{
-    db::models::PostQuery,
-    AppState, Result
+    error::ApiResult, AppState,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -128,13 +127,13 @@ pub struct PostsAnswerQuery {
 pub async fn list_of_posts(
     Query(params): Query<PostsAnswerQuery>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<PostsAnswer>> {
+) -> ApiResult<Json<PostsAnswer>> {
     debug!("{params:?}");
     // let fields_mas = get_fields_from_string(params.fields.clone());
     // debug!("{:?}", &fields_mas);
     // oki
 
-    let total = PostQuery::count_posts(&state.db).await.unwrap();
+    let total = state.db.get_posts_count().await?;
     let offset = {
         match params.offset {
             None => 0,
@@ -142,7 +141,7 @@ pub async fn list_of_posts(
         }
     };
 
-    let (results_raw, _) = PostQuery::find_posts_in_page(&state.db, offset, params.limit).await.unwrap();
+    let (results_raw, _) = state.db.get_posts_in_page(offset, params.limit).await?;
         // PostQuery::find_posts_in_page_with_filter(&state.db, offset, fields_mas, params.limit).await.unwrap();
     debug!("{results_raw:?}");
     let mut results: Vec<Results> = Vec::new();
@@ -173,11 +172,10 @@ pub async fn list_of_posts(
 }
 
 pub async fn get_post_by_id(
-    Path(id): Path<i32>,
+    Path(id): Path<u64>,
     State(state): State<Arc<AppState>>,
-) -> Result<Json<PostAnswer>> {
-
-    let raw_post = PostQuery::find_post_by_id(&state.db, id).await.expect("Database error!").expect("Post {id} doesn't exists!");
+) -> ApiResult<Json<PostAnswer>> {
+    let raw_post = state.db.get_post_by_id(id).await?;
     
     let mut flags: Vec<String> = Vec::new();
     if raw_post.flags.is_some() {
@@ -231,7 +229,7 @@ pub async fn get_post_by_id(
     // ));
 }
 
-pub fn get_post_security_hash(id: i32, key: &str) -> String {
+pub fn get_post_security_hash<T: ToString>(id: T, key: &str) -> String {
     use std::fmt::Write;
     let mut mac = HmacMd5::new_from_slice(key.as_bytes()).expect("Something wrong with HMAC key!");
     mac.update(id.to_string().as_bytes());
@@ -243,11 +241,11 @@ pub fn get_post_security_hash(id: i32, key: &str) -> String {
     result
 }
 
-pub fn get_post_content_path(id: i32, hash: String, mime: &str) -> String {
+pub fn get_post_content_path<T: Display>(id: T, hash: String, mime: &str) -> String {
     let extension = mime_guess2::get_mime_extensions_str(mime).expect("Unknown mime type!")[0];
     format!("data/posts/{id}_{hash}.{extension}").to_string()
 }
 
-pub fn get_post_thumbnail_path(id: i32, hash: String) -> String {
+pub fn get_post_thumbnail_path<T: Display>(id: T, hash: String) -> String {
     format!("data/generated-thumbnails/{id}_{hash}.jpg").to_string()
 }

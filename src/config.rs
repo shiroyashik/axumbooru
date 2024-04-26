@@ -1,6 +1,8 @@
-use std::{io::Read, path::PathBuf, str::FromStr};
+use std::{io::Read, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
+
+use crate::UserRank;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
@@ -226,84 +228,6 @@ pub struct Privileges {
     pub uploads_create: UserRank,
     #[serde(rename = "uploads:useDownloader")]
     pub uploads_use_downloader: UserRank,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub enum UserRank {
-    #[serde(rename = "administrator")]
-    Administrator,
-    #[serde(rename = "moderator")]
-    Moderator,
-    #[serde(rename = "power")]
-    Power,
-    #[serde(rename = "regular")]
-    Regular,
-    #[serde(rename = "restricted")]
-    Restricted,
-    #[serde(rename = "anonymous")]
-    Anonymous,
-    #[serde(rename = "nobody")]
-    Nobody,
-}
-
-impl FromStr for UserRank {
-    fn from_str(str: &str) -> Result<Self, Self::Err> {
-        match str {
-            "administrator" => Ok(Self::Administrator),
-            "moderator" => Ok(Self::Moderator),
-            "power" => Ok(Self::Power),
-            "regular" => Ok(Self::Regular),
-            "restricted" => Ok(Self::Restricted),
-            "anonymous" => Ok(Self::Anonymous),
-            "nobody" => Ok(Self::Nobody),
-            _ => Err(()),
-        }
-    }
-    
-    type Err = ();
-}
-
-impl ToString for UserRank {
-    fn to_string(&self) -> String {
-        match self {
-            UserRank::Administrator => String::from("administrator"),
-            UserRank::Moderator => String::from("moderator"),
-            UserRank::Power => String::from("power"),
-            UserRank::Regular => String::from("regular"),
-            UserRank::Restricted => String::from("restricted"),
-            UserRank::Anonymous => String::from("anonymous"),
-            UserRank::Nobody => String::from("nobody"),
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub enum AvatarStyle {
-    #[serde(rename = "gravatar")]
-    Gravatar,
-    #[serde(rename = "manual")]
-    Manual,
-}
-
-impl FromStr for AvatarStyle {
-    fn from_str(str: &str) -> Result<Self, Self::Err> {
-        match str {
-            "gravatar" => Ok(Self::Gravatar),
-            "manual" => Ok(Self::Manual),
-            _ => Err(()),
-        }
-    }
-
-    type Err = ();
-}
-
-impl ToString for AvatarStyle {
-    fn to_string(&self) -> String {
-        match self {
-            AvatarStyle::Gravatar => String::from("gravatar"),
-            AvatarStyle::Manual => String::from("manual"),
-        }
-    }
 }
 
 impl Config {

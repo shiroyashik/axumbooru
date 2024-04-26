@@ -5,7 +5,7 @@ use tower_http::services::ServeDir;
 use log::{debug, info};
 use std::{fmt::Write as _, fs, sync::Arc};
 
-use crate::{AppState, Result as HomebrewResult};
+use crate::{AppState, error::ApiResult};
 
 pub fn data_static() -> Router {
     Router::new().nest_service("/", get_service(ServeDir::new("./data")))
@@ -42,7 +42,7 @@ pub struct Uploads {
     size: usize,
 }
 
-pub async fn upload(State(state): State<Arc<AppState>>, mut multipart: Multipart) -> HomebrewResult<Json<UploadResponse>> {
+pub async fn upload(State(state): State<Arc<AppState>>, mut multipart: Multipart) -> ApiResult<Json<UploadResponse>> {
     let mut data = Bytes::new();
     let mut upload_meta: Option<Uploads> = None;
     while let Some(field) = multipart.next_field().await.unwrap() {
