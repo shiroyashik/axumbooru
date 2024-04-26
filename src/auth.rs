@@ -3,6 +3,7 @@ use axum::{
     http::{header, StatusCode, request::Parts},
     async_trait,
 };
+use log::debug;
 
 use crate::UserRank;
 
@@ -42,9 +43,11 @@ where
         match auth_header {
             Some(auth_header) => {
                 let auth_header = auth_header.split(' ').collect::<Vec<&str>>();
+                debug!("Auth: {auth_header:?}");
                 Ok(Self::default())
             },
             _ => { // Doesn't have AUTHORIZATION
+                debug!("Don't have Auth: {auth_header:?}");
                 Ok(Self::default())
             },
         }
