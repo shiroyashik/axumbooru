@@ -27,7 +27,7 @@ pub async fn test(
     debug!("Get: {params:?}");
     if params.error.is_none() && params.token.is_none() {
         let state = state.uploads.lock().expect("Uploads poisoned");
-        let body = Json(json!({"result": true, "auth": auth.has_authorization, "uploads": format!("{:?}", state.keys())}));
+        let body = Json(json!({"result": true, "auth": auth.is_some(), "uploads": format!("{:?}", state.keys())}));
         
         debug!("{body:?}");
         return Ok(body);

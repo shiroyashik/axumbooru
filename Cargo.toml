@@ -29,3 +29,7 @@ sha1 = "0.10.6"
 log = "0.4.21"
 env_logger = "0.11.3"
 anyhow = "1.0.82"
+# Currently doesn't using it
+ring = "0.17.8"
+dashmap = "5.5.3" # and it
+data-encoding = "2.5.0"
