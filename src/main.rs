@@ -1,5 +1,5 @@
 use axum::{
-    extract::DefaultBodyLimit, middleware::from_extractor, routing::{get, post}, Router
+    extract::DefaultBodyLimit, middleware::from_extractor, routing::{delete, get, post}, Router
 };
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
@@ -74,6 +74,7 @@ async fn main() {
         .route("/user/:user", get(api::user::get_user))
         .route("/user-tokens/:user", get(api::usertoken::list_usertokens))
         .route("/user-token/:user", post(api::usertoken::create_usertoken))
+        .route("/user-token/:user/:token", delete(api::usertoken::delete_usertoken))
         .route("/users", post(api::user::create_user))
         .route("/uploads", post(api::data::upload).layer(DefaultBodyLimit::max(1073741824))) // 1 GB
         .route_layer(from_extractor::<RequireAuth>()) // Auth, functions lower doesn't require it.

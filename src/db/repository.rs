@@ -52,18 +52,11 @@ impl Repository {
         Ok(user)
     }
     pub async fn create_user(&self, user: user::ActiveModel) -> Result<user::ActiveModel, DatabaseError> {
-        let user = user.try_into_model().expect("Can't into model");
         user::ActiveModel {
-            name: Set(user.name.to_owned()),
-            password_hash: Set(user.password_hash.to_owned()),
-            password_salt: Set(user.password_salt.to_owned()),
-            email: Set(user.email.to_owned()),
-            rank: Set(user.rank.to_owned()),
             creation_time: Set(Local::now().naive_local().to_owned()),
-            avatar_style: Set(user.avatar_style.to_owned()),
             version: Set(1),
             password_revision: Set(3),
-            ..Default::default()
+            ..user
         }
         .save(&self.0)
         .await.map_err(to_db_error)
@@ -128,15 +121,9 @@ impl Repository {
         Ok(Post::find_by_id(id as i32).one(&self.0).await.map_err(to_db_error)?.ok_or_else(|| {DatabaseError::from(anyhow::anyhow!("Post not found"))})?)
     }
     pub async fn create_post(&self, post: post::ActiveModel) -> Result<post::ActiveModel, DatabaseError> {
-        let post = post.try_into_model().expect("Can't into model");
         post::ActiveModel {
             creation_time: Set(Local::now().naive_local().to_owned()),
-            safety: Set(post.safety.to_owned()),
-            r#type: Set(post.r#type.to_owned()),
-            checksum: Set(post.checksum.to_owned()),
-            mime_type: Set(post.mime_type.to_owned()),
-            version: Set(post.version.to_owned()),
-            ..Default::default()
+            ..post
         }
         .save(&self.0)
         .await.map_err(to_db_error)
@@ -204,18 +191,12 @@ impl Repository {
         Ok(UserToken::find().filter(user_token::Column::Token.contains(token)).one(&self.0).await.map_err(to_db_error)?.ok_or_else(|| {DatabaseError::from(anyhow::anyhow!("UserToken not found"))})?)
     }
     pub async fn create_user_token(&self, user_token: user_token::ActiveModel) -> Result<user_token::ActiveModel, DatabaseError> {
-        let user_token = user_token.try_into_model().expect("Can't into model");
         user_token::ActiveModel {
-            user_id: Set(user_token.user_id.to_owned()),
-            token: Set(user_token.token.to_owned()),
-            note: Set(user_token.note.to_owned()),
-            enabled: Set(user_token.enabled.to_owned()),
-            expiration_time: Set(user_token.expiration_time.to_owned()),
             creation_time: Set(Local::now().naive_local().to_owned()),
             last_edit_time: Set(None),
             last_usage_time: Set(None),
             version: Set(1),
-            ..Default::default()
+            ..user_token
         }
         .save(&self.0)
         .await.map_err(to_db_error)
@@ -242,7 +223,7 @@ impl Repository {
         .update(&self.0)
         .await.map_err(to_db_error)
     }
-    pub async fn delete_user_token(&self, token: &str) -> Result<(), DatabaseError> {
+    pub async fn delete_user_token(&self, token: &str) -> Result<(), DeleteUserTokenError> {
         let user_token: user_token::ActiveModel = UserToken::find()
             .filter(user_token::Column::Token.contains(token))
             .one(&self.0)
@@ -279,16 +260,9 @@ impl Repository {
         paginator.fetch_page(page - 1).await.map_err(to_db_error).map(|p| (p, num_pages))
     }
     pub async fn create_snapshot(&self, snapshot: snapshot::ActiveModel) -> Result<snapshot::ActiveModel, DatabaseError> {
-        let snapshot = snapshot.try_into_model().expect("Can't into model");
         snapshot::ActiveModel {
             creation_time: Set(Local::now().naive_local().to_owned()),
-            resource_type: Set(snapshot.resource_type.to_owned()),
-            operation: Set(snapshot.operation.to_owned()),
-            user_id: Set(snapshot.user_id.to_owned()),
-            data: Set(snapshot.data.to_owned()),
-            resource_name: Set(snapshot.resource_name.to_owned()),
-            resource_pkey: Set(snapshot.resource_pkey.to_owned()),
-            ..Default::default()
+            ..snapshot
         }
         .save(&self.0)
         .await.map_err(to_db_error)

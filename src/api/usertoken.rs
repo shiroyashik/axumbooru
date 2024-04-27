@@ -8,7 +8,7 @@ use log::debug;
 use uuid::Uuid;
 
 use crate::{
-    db::schemas::user_token, error::ApiResult, AppState
+    db::schemas::user_token, error::{ApiError, ApiResult}, AppState
 };
 
 use super::user::MicroUser;
@@ -37,7 +37,7 @@ pub struct CreateUserTokenHttpQuery {
 
 // Внимание! Строчки дальше отвечают за состояния по умолчанию при создании токена
 // проблема в том что при логине на фронтенде "expiration_time" не указывается
-// и будет браться от сюда. TODO! Брать значение offset'a из конфига, а не хардкод!
+// и будет браться от сюда. TODO: Брать значение offset'a из конфига, а не хардкод!
 impl Default for CreateUserTokenHttpQuery {
     fn default() -> Self {
         Self {
@@ -65,6 +65,7 @@ pub async fn create_usertoken( // POST
         expiration_time: Set(Some(params.expiration_time.unwrap_or(CreateUserTokenHttpQuery::default().expiration_time.unwrap()).naive_utc())),
         ..Default::default()
     };
+    debug!("{form_data:?}");
     state.db.create_user_token(form_data.clone()).await?;
     let raw_token = state.db.get_user_token(&form_data.token.unwrap()).await?;
     Ok(Json(UserTokenHttpResponse {
@@ -78,6 +79,20 @@ pub async fn create_usertoken( // POST
         last_usage_time: raw_token.last_usage_time,
         version: raw_token.version,
     }))
+}
+
+pub async fn delete_usertoken(
+    Path((user, token)): Path<(String, String)>,
+    State(state): State<Arc<AppState>>,
+) -> ApiResult<&'static str> {
+    if state.db.get_user_by_name(&user).await?.id == state.db.get_user_token(&token).await?.user_id {
+        state.db.delete_user_token(&token).await?;
+        debug!("Token {token} deleted!")
+    } else {
+        return Err(ApiError::DeleteToken(crate::db::errors::DeleteUserTokenError::TokenUserIdDontMatch));
+    }
+    // Output
+    Ok("{}")
 }
 
 #[derive(Serialize)]

@@ -66,6 +66,7 @@ where
 
         match metod {
             "Basic" => {
+                let auth = String::from_utf8(BASE64.decode(auth.as_bytes()).unwrap()).unwrap();
                 let (name, password) = auth.split_once(':').unwrap();
                 debug!("!BASIC {name} {password}");
                 Ok(Self::Basic {name: name.to_string(), password: password.to_string()})
