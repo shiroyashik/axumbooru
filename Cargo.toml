@@ -4,26 +4,32 @@ authors = ["Shiroyashik <shiroyashik@shsr.ru>"]
 license = "GPL-3.0-or-later"
 version = "0.1.0"
 edition = "2021"
-default-run = "axumbooru"
+publish = false
 
-[[bin]]
-name = "dsync"
-path = "dsync.rs"
+[workspace]
+members = ["migration"]
 
 [dependencies]
-diesel = { version = "2.1.4", features = ["uuid", "postgres", "chrono"] }
-dsync = "0.0.16"
 dotenvy = "0.15.7"
-uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
-bb8 = "0.8.3"
-diesel-async = { version = "0.4.1", features = ["postgres", "bb8"] }
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json = "1.0.113"
-tokio = { version = "1.36.0", features = ["full"] }
-axum = { version = "0.7.4", features = ["json"] }
-anyhow = "1.0.79"
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-toml = "0.8.10"
-tower-http = { version = "0.5.1", features = ["fs"] }
-chrono = { version = "0.4.34", features = ["serde"] }
+uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+tokio = { version = "1.37.0", features = ["full"] }
+axum = { version = "0.7.5", features = ["json", "query", "tracing", "multipart"] }
+toml = "0.8.12"
+tower-http = { version = "0.5.2", features = ["fs", "trace"] }
+chrono = { version = "0.4.37", features = ["serde"] }
+sea-orm = { version = "0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-uuid", "debug-print"] }
+hmac = "0.12.1"
+md-5 = "0.10.6"
+mime_guess2 = "2.0.5"
+thiserror = "1.0.58"
+argon2 = "0.5.3"
+sha1 = "0.10.6"
+log = "0.4.21"
+env_logger = "0.11.3"
+anyhow = "1.0.82"
+# Currently doesn't using it
+ring = "0.17.8"
+dashmap = "5.5.3" # and it
+data-encoding = "2.5.0"

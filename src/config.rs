@@ -2,12 +2,49 @@ use std::{io::Read, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+use crate::UserRank;
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct Config {
     pub name: String,
+    pub domain: String,
+    pub secret: String,
+    pub delete_source_files: bool,
+    pub contact_email: String,
+    pub enable_safety: bool,
+    pub tag_name_regex: String,
+    pub tag_category_name_regex: String,
+    pub pool_name_regex: String,
+    pub pool_category_name_regex: String,
+    pub password_regex: String,
+    pub user_name_regex: String,
+    pub allow_broken_uploads: bool,
+    pub webhooks: Option<Vec<String>>,
+    pub default_rank: UserRank,
+    pub thumbnails: Thumbnails,
+    pub smtp: Smtp,
+    pub privileges: Privileges,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Thumbnails {
+    pub avatar_width: u64,
+    pub avatar_height: u64,
+    pub post_width: u64,
+    pub post_height: u64,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Smtp {
+    pub enabled: bool,
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub pass: String,
+    pub from: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Privileges {
     #[serde(rename = "users:create:self")]
     pub users_create_self: UserRank,
@@ -193,21 +230,6 @@ pub struct Privileges {
     pub uploads_use_downloader: UserRank,
 }
 
-#[derive(Deserialize, Serialize)]
-pub enum UserRank {
-    #[serde(rename = "administrator")]
-    Administrator,
-
-    #[serde(rename = "moderator")]
-    Moderator,
-    #[serde(rename = "power")]
-    Power,
-    #[serde(rename = "regular")]
-    Regular,
-    #[serde(rename = "anonymous")]
-    Anonymous,
-}
-
 impl Config {
     pub fn parse(path: PathBuf) -> Self {
         let mut file = std::fs::File::open(path).expect("Access denied or file doesn't exists!");
@@ -218,11 +240,11 @@ impl Config {
     }
 }
 
-#[allow(dead_code)]
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            name: "axumbooru".to_string(),
-        }
-    }
-}
+// #[allow(dead_code)]
+// impl Default for Config {
+//     fn default() -> Self {
+//         Self {
+//             name: "axumbooru".to_string(),
+//         }
+//     }
+// }
