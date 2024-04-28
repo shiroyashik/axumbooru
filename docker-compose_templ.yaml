@@ -9,23 +9,27 @@ services:
     - 8080:80
 
   frontend:
-    # image: szurubooru/client:2.5
+    # Based on szurubooru/client:2.5
     build: ./client 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      # Timezone
       TZ: 'Europe/Moscow'
-      BACKEND_HOST: #IP:PORT
+      # Backend "hostname:port"
+      BACKEND_HOST: 'host.docker.internal:6667'
       BASE_URL: 
     volumes:
       - ./data:/data:ro
     ports:
-      - 8081:80
+      - 80:80
 
   postgresql:
     image: postgres:11-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: #USR
-      POSTGRES_PASSWORD: #PSW
+      POSTGRES_USER: axumbooru
+      POSTGRES_PASSWORD: axumbooru
     ports:
       - 5432:5432
     volumes:

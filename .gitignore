@@ -1,7 +1,6 @@
 /target
 /data
 /.vscode
+docker-compose.yaml
 booruconfig.toml
 .env
-docker-compose.yaml
-/client
