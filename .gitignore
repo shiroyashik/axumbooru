@@ -3,3 +3,5 @@
 /.vscode
 booruconfig.toml
 .env
+docker-compose.yaml
+/client

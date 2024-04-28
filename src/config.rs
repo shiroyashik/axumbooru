@@ -8,6 +8,7 @@ use crate::UserRank;
 pub struct Config {
     pub name: String,
     pub domain: String,
+    pub listen: String,
     pub secret: String,
     pub delete_source_files: bool,
     pub contact_email: String,

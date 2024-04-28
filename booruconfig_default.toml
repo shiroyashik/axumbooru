@@ -6,6 +6,9 @@ name = "axumbooru"
 # P.S. Также некоторые ключи которые я посчитал
 # ненужными или изыботочными опущены.
 
+
+listen = "127.0.0.1:6667"
+
 # full url to the homepage of this szurubooru site, with no trailing slash
 domain = "" # example = http://example.com
 # used to salt the users' password hashes and generate filenames for static content

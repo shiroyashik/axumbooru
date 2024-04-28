@@ -1,0 +1,35 @@
+services:
+  phppgadmin:
+    container_name: phppgadmin
+    restart: unless-stopped
+    image: ngosang/phppgadmin:7.14.6-mod-1
+    volumes:
+    - ./config.inc.php:/var/www/app/conf/config.inc.php:ro
+    ports:
+    - 8080:80
+
+  frontend:
+    # image: szurubooru/client:2.5
+    build: ./client 
+    environment:
+      TZ: 'Europe/Moscow'
+      BACKEND_HOST: #IP:PORT
+      BASE_URL: 
+    volumes:
+      - ./data:/data:ro
+    ports:
+      - 8081:80
+
+  postgresql:
+    image: postgres:11-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: #USR
+      POSTGRES_PASSWORD: #PSW
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

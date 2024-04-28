@@ -61,6 +61,8 @@ async fn main() {
         config: Config::parse(PathBuf::from_str("booruconfig.toml").unwrap()),
         uploads: Mutex::new(HashMap::new()),
     });
+
+    let listen = state.config.listen.clone();
     
     debug!("State ready!");
     trace!("Data:\n{:?}", state);
@@ -83,7 +85,7 @@ async fn main() {
         .with_state(state)
         .layer(TraceLayer::new_for_http());
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:6667")
+    let listener = tokio::net::TcpListener::bind(listen)
         .await
         .unwrap();
     info!("Listening on {}", listener.local_addr().unwrap());
