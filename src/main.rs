@@ -4,33 +4,39 @@ use axum::{
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 use tower_http::trace::TraceLayer;
-use std::{collections::HashMap, path::PathBuf, str::FromStr, sync::{Arc, Mutex}};
-use log::{debug, info, trace};
+use std::{path::PathBuf, str::FromStr, sync::{Arc, Mutex}};
+use log::{debug, error, info, trace};
 
-// Config
+// Configuration
 pub mod config;
 pub use config::Config;
 
-// Api
+// API
 pub mod api;
+
+// Functions
+pub mod func;
 
 // Error
 pub mod error;
 
-// Auth
+// Authentication
 pub mod auth;
 pub use auth::RequireAuth;
 
-// DB
+// Database
 pub mod db;
 use db::repository::Repository;
 
+// Image Storage
+pub mod data;
+use data::Data;
+
 #[derive(Debug)]
 pub struct AppState {
-    // db: DatabaseConnection,
     db: Repository,
     config: Config,
-    uploads: Mutex<HashMap<String, api::data::Uploads>>,
+    uploads: Mutex<Data>,
 }
 
 #[tokio::main]
@@ -38,9 +44,15 @@ async fn main() {
     dotenv().ok();
     env_logger::init();
 
+    std::panic::set_hook(Box::new(|x| {
+        error!("{x}")
+    }));
+
     debug!("Current dir: {:?}", std::env::current_dir());
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    data::Data::flush_temporary_uploads().unwrap();
 
     // set up connection pool
     // let mut opt = ConnectOptions::new(db_url);
@@ -59,7 +71,7 @@ async fn main() {
             .await
             .expect("Database connection error!"),
         config: Config::parse(PathBuf::from_str("booruconfig.toml").unwrap()),
-        uploads: Mutex::new(HashMap::new()),
+        uploads: Mutex::new(Data::new()),
     });
 
     let listen = state.config.listen.clone();
@@ -71,7 +83,9 @@ async fn main() {
         .route("/test", get(api::test::test))
         .route("/test1", get(api::test::newtest))
         .route("/test2", get(api::test::newtest2))
+        // TODO: Удалить мусор выше
         .route("/posts/", get(api::post::list_of_posts))
+        .route("/posts/reverse-search", post(api::post::reverse_post_search))
         .route("/post/:id", get(api::post::get_post_by_id))
         .route("/user/:user", get(api::user::get_user))
         .route("/user-tokens/:user", get(api::usertoken::list_usertokens))
@@ -79,6 +93,7 @@ async fn main() {
         .route("/user-token/:user/:token", delete(api::usertoken::delete_usertoken))
         .route("/users", post(api::user::create_user))
         .route("/uploads", post(api::data::upload).layer(DefaultBodyLimit::max(1073741824))) // 1 GB
+        // TODO: Брать значение на максимально возможный для загрузки файл из конфига
         .route_layer(from_extractor::<RequireAuth>()) // Auth, functions lower doesn't require it.
         .route("/info", get(api::info::server_info))
         .fallback_service(api::data::data_static())

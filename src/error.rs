@@ -16,6 +16,8 @@ pub enum ApiError {
     GetUser(#[from] GetUserError),
     #[error(transparent)]
     DeleteToken(#[from] DeleteUserTokenError),
+    #[error("Something went wrong!")]
+    Uploads,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -38,6 +40,7 @@ impl IntoResponse for ApiError {
             ApiError::DeleteToken(DeleteUserTokenError::DatabaseError(_)) => internal_server_error("InternalError", &description, &description),
             ApiError::DeleteToken(DeleteUserTokenError::TokenNotFound { .. }) => internal_server_error("InternalError", &description, &description),
             ApiError::DeleteToken(DeleteUserTokenError::TokenUserIdDontMatch) => method_not_allowed(),
+            ApiError::Uploads => method_not_allowed(),
         }
     }
 }
