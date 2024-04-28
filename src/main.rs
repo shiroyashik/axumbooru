@@ -52,7 +52,8 @@ async fn main() {
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    data::Data::flush_temporary_uploads().unwrap();
+    Data::repair_data().unwrap();
+    Data::flush_temporary_uploads().unwrap();
 
     // set up connection pool
     // let mut opt = ConnectOptions::new(db_url);

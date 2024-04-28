@@ -1,8 +1,8 @@
-use std::{fmt::Write as _, fs};
+use std::{fmt::Write as _, fs, path::Path};
 use anyhow::{anyhow, Ok, Result};
 use axum::body::Bytes;
 use dashmap::DashMap;
-use log::debug;
+use log::{debug, info, warn};
 use ring::digest;
 
 #[derive(Debug)]
@@ -18,11 +18,42 @@ impl Data {
     pub fn new() -> Self {
         Self::default()
     }
+    pub fn repair_data() -> Result<()> {
+        debug!("Data Storage repair started!");
+        if !Path::new("./data").is_dir() {
+            warn!("./data not found");
+            fs::create_dir("./data")?;
+            info!("./data created!");
+        }
+        if !Path::new("./data/temporary-uploads").is_dir() {
+            warn!("./data/temporary-uploads not found");
+            fs::create_dir("./data/temporary-uploads")?;
+            info!("./data/temporary-uploads created!");
+        }
+        if !Path::new("./data/avatars").is_dir() {
+            warn!("./data/avatars not found");
+            fs::create_dir("./data/avatars")?;
+            info!("./data/avatars created!");
+        }
+        if !Path::new("./data/posts").is_dir() {
+            warn!("./data/posts not found");
+            fs::create_dir("./data/posts")?;
+            info!("./data/posts created!");
+        }
+        if !Path::new("./data/generated-thumbnails").is_dir() {
+            warn!("./data/generated-thumbnails not found");
+            fs::create_dir("./data/generated-thumbnails")?;
+            info!("./data/generated-thumbnails created!");
+        }
+        debug!("Data Storage repair complete!");
+        Ok(())
+    }
     pub fn flush_temporary_uploads() -> Result<()> {
         debug!("Flush started!");
-        for file in fs::read_dir("./data/tmp")? {
-            // debug!("Removing {:?}", file?.file_name());
-            fs::remove_file(file?.path())?;
+        for file in fs::read_dir("./data/temporary-uploads")? {
+            let file = file?;
+            debug!("Removing {:?}", &file.file_name());
+            fs::remove_file(file.path())?;
         }
         debug!("Flushing complete!");
         Ok(())
@@ -48,7 +79,7 @@ impl Data {
             return Err(anyhow!("{token} is existing!"));
         };
         let filename = format!("{}.{}", token, extension);
-        fs::write(format!("./data/tmp/{filename}"), raw)?;
+        fs::write(format!("./data/temporary-uploads/{filename}"), raw)?;
         self.0.insert(token.clone(), Upload { filename, content_type: content_type.to_owned() });
         Ok(token)
     }
