@@ -8,6 +8,12 @@ use ring::digest;
 #[derive(Debug)]
 pub struct Data(DashMap<String, Upload>);
 
+pub const DATA: &str = "./data";
+pub const AVATARS: &str = "./data/avatars";
+pub const POSTS: &str = "./data/posts";
+pub const TEMP: &str = "./data/temporary-uploads";
+pub const THUMBNAILS: &str = "./data/generated-thumbnails";
+
 #[derive(Debug, Clone)]
 pub struct Upload {
     pub filename: String,
@@ -18,33 +24,22 @@ impl Data {
     pub fn new() -> Self {
         Self::default()
     }
+    // Working with data dir
+    fn check_and_repair_directory(path: &str) -> Result<()> {
+        if !Path::new(path).is_dir() {
+            warn!("{} not found", path);
+            fs::create_dir(path)?;
+            info!("{} created!", path);
+        }
+        Ok(())
+    }
     pub fn repair_data() -> Result<()> {
         debug!("Data Storage repair started!");
-        if !Path::new("./data").is_dir() {
-            warn!("./data not found");
-            fs::create_dir("./data")?;
-            info!("./data created!");
-        }
-        if !Path::new("./data/temporary-uploads").is_dir() {
-            warn!("./data/temporary-uploads not found");
-            fs::create_dir("./data/temporary-uploads")?;
-            info!("./data/temporary-uploads created!");
-        }
-        if !Path::new("./data/avatars").is_dir() {
-            warn!("./data/avatars not found");
-            fs::create_dir("./data/avatars")?;
-            info!("./data/avatars created!");
-        }
-        if !Path::new("./data/posts").is_dir() {
-            warn!("./data/posts not found");
-            fs::create_dir("./data/posts")?;
-            info!("./data/posts created!");
-        }
-        if !Path::new("./data/generated-thumbnails").is_dir() {
-            warn!("./data/generated-thumbnails not found");
-            fs::create_dir("./data/generated-thumbnails")?;
-            info!("./data/generated-thumbnails created!");
-        }
+        Data::check_and_repair_directory(DATA)?;
+        Data::check_and_repair_directory(AVATARS)?;
+        Data::check_and_repair_directory(POSTS)?;
+        Data::check_and_repair_directory(TEMP)?;
+        Data::check_and_repair_directory(THUMBNAILS)?;
         debug!("Data Storage repair complete!");
         Ok(())
     }
@@ -58,6 +53,7 @@ impl Data {
         debug!("Flushing complete!");
         Ok(())
     }
+    // Implementing Self
     pub fn vec(&self) -> Vec<(String, Upload)> {
         self.0.clone().into_iter().collect()
     }

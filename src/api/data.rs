@@ -4,10 +4,10 @@ use tower_http::services::ServeDir;
 use log::{debug, info};
 use std::{fs, sync::Arc};
 
-use crate::{error::{ApiError, ApiResult}, AppState};
+use crate::{data::DATA, error::{ApiError, ApiResult}, AppState};
 
 pub fn data_static() -> Router {
-    Router::new().nest_service("/", get_service(ServeDir::new("./data")))
+    Router::new().nest_service("/", get_service(ServeDir::new(DATA)))
 }
 
 pub fn get_folder_size(path: &str) -> Result<u64, std::io::Error> {
