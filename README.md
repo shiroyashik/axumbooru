@@ -4,7 +4,6 @@
 Выполнить для подготовки окружения к разработке
 ```bash
 echo -e "DATABASE_URL=postgres://axumbooru:axumbooru@localhost/axumbooru\nRUST_LOG=debug" > .env
-mkdir data
 cp booruconfig_default.toml booruconfig.toml
 cp docker-compose_templ.yaml docker-compose.yaml
 # Запускает Postgresql на 5432,
