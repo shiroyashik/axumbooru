@@ -15,6 +15,3 @@ sea migrate
 # Собирает и запускает Axumbooru
 cargo run
 ```
-
-Для обратной связи:
-[Telegram](https://t.me/shiroyashik), [Discord](https://discord.com/users/563990794361634826).
